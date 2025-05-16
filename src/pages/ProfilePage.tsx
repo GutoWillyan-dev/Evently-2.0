@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, MapPin, Ticket, Upload, Check, Mail, AlertTriangle } from "lucide-react";
+import { Calendar, MapPin, Ticket, Upload, Check, Mail, AlertTriangle, QrCode } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -19,6 +19,7 @@ const userTickets = [
     id: "ticket1",
     eventName: "Festival de Música 2025",
     date: "15 Mar 2025",
+    time: "19:00",
     location: "São Paulo, SP",
     ticketType: "VIP",
     price: "R$ 150,00",
@@ -29,6 +30,7 @@ const userTickets = [
     id: "ticket2",
     eventName: "Teatro Nacional",
     date: "20 Mar 2025",
+    time: "20:30",
     location: "Rio de Janeiro, RJ",
     ticketType: "Standard",
     price: "R$ 80,00",
@@ -37,36 +39,99 @@ const userTickets = [
   },
 ];
 
-// Mock user data
-const userData = {
-  name: "João Silva",
-  email: "joao.silva@exemplo.com",
-  phone: "(11) 98765-4321",
-  profilePicture: "",
-  emailVerified: false
-};
-
 const ProfilePage = () => {
-  const [name, setName] = useState(userData.name);
-  const [email, setEmail] = useState(userData.email);
-  const [phone, setPhone] = useState(userData.phone);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [profileImage, setProfileImage] = useState(userData.profilePicture);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [isEmailVerified, setIsEmailVerified] = useState(userData.emailVerified);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isVerificationSent, setIsVerificationSent] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<null | typeof userTickets[0]>(null);
+  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
+  const [qrCodeExpiry, setQrCodeExpiry] = useState<Date | null>(null);
+  const [remainingTime, setRemainingTime] = useState<string>("");
   const { toast } = useToast();
+  const initialTab = searchParams.get('tab') || 'tickets';
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("eventlyUser");
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setName(userData.name || "");
+      setEmail(userData.email || "");
+      setPhone(userData.phone || "");
+      setProfileImage(userData.avatar || null);
+      setIsEmailVerified(userData.emailVerified || false);
+    } else {
+      // Redirect to login if no user data is found
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  // Handle countdown timer for QR code
+  useEffect(() => {
+    let timer: number;
+    
+    if (qrCodeExpiry) {
+      timer = window.setInterval(() => {
+        const now = new Date();
+        const diff = qrCodeExpiry.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          clearInterval(timer);
+          setTicketDialogOpen(false);
+          toast({
+            title: "QR Code expirado",
+            description: "O QR Code expirou. Por favor, gere um novo.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        const minutes = Math.floor(diff / 1000 / 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        setRemainingTime(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [qrCodeExpiry, toast]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
     
-    // Simulação de atualização do perfil
+    // Get current user data
+    const storedUser = localStorage.getItem("eventlyUser");
+    if (!storedUser) return;
+    
+    const userData = JSON.parse(storedUser);
+    
+    // Update user data
+    const updatedUser = {
+      ...userData,
+      name,
+      email,
+      phone,
+      avatar: profileImage,
+    };
+    
+    // Save updated user data
+    localStorage.setItem("eventlyUser", JSON.stringify(updatedUser));
+    
+    // Simulate API call delay
     setTimeout(() => {
       setIsUpdating(false);
       toast({
@@ -99,7 +164,22 @@ const ProfilePage = () => {
     
     setIsUpdating(true);
     
-    // Simulação de atualização de senha
+    // Get current user data
+    const storedUser = localStorage.getItem("eventlyUser");
+    if (!storedUser) return;
+    
+    const userData = JSON.parse(storedUser);
+    
+    // Update user password (in a real app, this would be hashed)
+    const updatedUser = {
+      ...userData,
+      password: newPassword,
+    };
+    
+    // Save updated user data
+    localStorage.setItem("eventlyUser", JSON.stringify(updatedUser));
+    
+    // Simulate API call delay
     setTimeout(() => {
       setIsUpdating(false);
       setCurrentPassword("");
@@ -131,6 +211,15 @@ const ProfilePage = () => {
   const handleSaveProfileImage = () => {
     if (previewImage) {
       setProfileImage(previewImage);
+      
+      // Get current user data and update avatar
+      const storedUser = localStorage.getItem("eventlyUser");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        userData.avatar = previewImage;
+        localStorage.setItem("eventlyUser", JSON.stringify(userData));
+      }
+      
       setPreviewImage(null);
       
       toast({
@@ -155,6 +244,14 @@ const ProfilePage = () => {
       setIsEmailVerified(true);
       setVerificationDialogOpen(false);
       
+      // Update user data with email verification status
+      const storedUser = localStorage.getItem("eventlyUser");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        userData.emailVerified = true;
+        localStorage.setItem("eventlyUser", JSON.stringify(userData));
+      }
+      
       toast({
         title: "Email verificado",
         description: "Seu email foi verificado com sucesso.",
@@ -168,6 +265,16 @@ const ProfilePage = () => {
     }
   };
 
+  const handleViewTicket = (ticket: typeof userTickets[0]) => {
+    setSelectedTicket(ticket);
+    setTicketDialogOpen(true);
+    
+    // Set QR code expiry time to 1 hour from now
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 1);
+    setQrCodeExpiry(expiry);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -176,7 +283,7 @@ const ProfilePage = () => {
         <div className="container mx-auto px-4 lg:px-8 py-12">
           <h1 className="text-3xl font-bold mb-8 animate-fade-in">Meu Perfil</h1>
           
-          <Tabs defaultValue="tickets" className="space-y-8">
+          <Tabs defaultValue={initialTab} className="space-y-8">
             <TabsList className="grid w-full grid-cols-3 bg-evently">
               <TabsTrigger value="tickets">Meus Ingressos</TabsTrigger>
               <TabsTrigger value="profile">Informações Pessoais</TabsTrigger>
@@ -219,18 +326,14 @@ const ProfilePage = () => {
                             </div>
                           </div>
                           
-                          <div className="mt-4 flex justify-between items-center">
-                            <Link to={`/ingressos/${ticket.id}`}>
-                              <Button size="sm" className="bg-evently hover:bg-evently-light">
-                                Ver Ingresso
-                              </Button>
-                            </Link>
-                            
-                            <img 
-                              src={ticket.qrCode} 
-                              alt="QR Code" 
-                              className="h-16 w-16"
-                            />
+                          <div className="mt-4 flex justify-end">
+                            <Button 
+                              size="sm" 
+                              className="bg-evently hover:bg-evently-light"
+                              onClick={() => handleViewTicket(ticket)}
+                            >
+                              Ver Ingresso
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -269,7 +372,7 @@ const ProfilePage = () => {
                         {profileImage ? (
                           <AvatarImage src={profileImage} alt={name} />
                         ) : (
-                          <AvatarFallback className="text-3xl">
+                          <AvatarFallback className="text-3xl bg-evently-light text-white">
                             {name.charAt(0)}
                           </AvatarFallback>
                         )}
@@ -462,6 +565,7 @@ const ProfilePage = () => {
         </div>
       </div>
       
+      {/* Email Verification Dialog */}
       <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -488,6 +592,86 @@ const ProfilePage = () => {
             </Button>
             <Button className="bg-evently hover:bg-evently-light" onClick={handleVerifyEmail}>
               Verificar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Ticket View Dialog */}
+      <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Seu ingresso para {selectedTicket?.eventName}</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTicket && (
+            <div className="py-4">
+              <div className="flex flex-col items-center mb-6">
+                <div className="bg-white p-2 border rounded-lg mb-2">
+                  <img
+                    src={selectedTicket.qrCode}
+                    alt="QR Code"
+                    className="w-48 h-48"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-1">
+                    QR Code válido por:
+                  </p>
+                  <p className="font-semibold text-evently">
+                    {remainingTime}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Evento</p>
+                    <p className="font-medium">{selectedTicket.eventName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Tipo</p>
+                    <p className="font-medium">{selectedTicket.ticketType}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Data</p>
+                    <p className="font-medium">{selectedTicket.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Horário</p>
+                    <p className="font-medium">{selectedTicket.time}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Local</p>
+                  <p className="font-medium">{selectedTicket.location}</p>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Valor</p>
+                  <p className="font-medium">{selectedTicket.price}</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-500">
+                  Apresente este QR Code na entrada do evento.
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  O QR Code expira automaticamente após 1 hora.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button className="w-full bg-evently hover:bg-evently-light" onClick={() => setTicketDialogOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -28,6 +28,8 @@ const LoginPage = () => {
       const mockUser = {
         name: email.split('@')[0], // Simple way to extract a name from the email
         email,
+        phone: "", // Empty phone by default
+        emailVerified: false, // User needs to verify email
         // No avatar by default, user can add it in profile
       };
       
