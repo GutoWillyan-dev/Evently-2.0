@@ -3,8 +3,30 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+// Mock user state (in a real app, this would come from authentication context)
+interface User {
+  name: string;
+  email: string;
+  avatar?: string;
+}
 
 const Navbar = () => {
+  // Mock authentication state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  // Effect to check if user is logged in (using localStorage in this mock implementation)
+  useEffect(() => {
+    const storedUser = localStorage.getItem("eventlyUser");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   return (
     <nav className="bg-evently w-full py-4">
       <div className="container mx-auto flex justify-between items-center px-4 lg:px-8">
@@ -34,28 +56,33 @@ const Navbar = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Link to="/login">
-              <Button variant="ghost" className="text-white hover:bg-evently-light">
-                Login
-              </Button>
+          {isLoggedIn ? (
+            <Link to="/perfil" className="flex items-center space-x-2">
+              <Avatar className="h-9 w-9 border-2 border-white">
+                {user?.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                ) : (
+                  <AvatarFallback className="bg-evently-light text-white">
+                    {user?.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                )}
+              </Avatar>
             </Link>
-            <span className="text-white">|</span>
-            <Link to="/cadastro">
-              <Button variant="ghost" className="text-white hover:bg-evently-light">
-                Cadastre-se
-              </Button>
-            </Link>
-          </div>
-
-          <Link to="/perfil" className="text-white">
-            <Button variant="ghost" className="rounded-full p-2 hover:bg-evently-light">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </Button>
-          </Link>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Link to="/login">
+                <Button variant="ghost" className="text-white hover:bg-evently-light">
+                  Login
+                </Button>
+              </Link>
+              <span className="text-white">|</span>
+              <Link to="/cadastro">
+                <Button variant="ghost" className="text-white hover:bg-evently-light">
+                  Cadastre-se
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>

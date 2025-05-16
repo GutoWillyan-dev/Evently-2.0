@@ -24,6 +24,16 @@ const LoginPage = () => {
     setTimeout(() => {
       setIsLoading(false);
       
+      // Create mock user data (in a real app, this would come from the backend)
+      const mockUser = {
+        name: email.split('@')[0], // Simple way to extract a name from the email
+        email,
+        // No avatar by default, user can add it in profile
+      };
+      
+      // Store user data in localStorage (in a real app, this would be a token or session)
+      localStorage.setItem('eventlyUser', JSON.stringify(mockUser));
+      
       // Sucesso de login (simulado)
       toast({
         title: "Login realizado com sucesso!",

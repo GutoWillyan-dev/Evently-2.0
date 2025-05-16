@@ -36,6 +36,16 @@ const RegisterPage = () => {
     setTimeout(() => {
       setIsLoading(false);
       
+      // Create new user data (in a real app, this would be done by the backend)
+      const newUser = {
+        name,
+        email,
+        // No avatar by default
+      };
+      
+      // Store user data in localStorage (in a real app, this would be a token or session)
+      localStorage.setItem('eventlyUser', JSON.stringify(newUser));
+      
       // Sucesso de cadastro (simulado)
       toast({
         title: "Cadastro realizado com sucesso!",
