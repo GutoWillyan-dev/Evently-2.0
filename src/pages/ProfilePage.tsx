@@ -8,8 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, MapPin, Ticket } from "lucide-react";
+import { Calendar, MapPin, Ticket, Upload, Check, Mail, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 // Mock data for user tickets
 const userTickets = [
@@ -40,6 +42,8 @@ const userData = {
   name: "João Silva",
   email: "joao.silva@exemplo.com",
   phone: "(11) 98765-4321",
+  profilePicture: "",
+  emailVerified: false
 };
 
 const ProfilePage = () => {
@@ -50,6 +54,12 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [profileImage, setProfileImage] = useState(userData.profilePicture);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(userData.emailVerified);
+  const [isVerificationSent, setIsVerificationSent] = useState(false);
   const { toast } = useToast();
 
   const handleUpdateProfile = (e: React.FormEvent) => {
@@ -68,6 +78,15 @@ const ProfilePage = () => {
 
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isEmailVerified) {
+      toast({
+        title: "Verificação necessária",
+        description: "Por favor, verifique seu email antes de alterar sua senha.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (newPassword !== confirmPassword) {
       toast({
@@ -94,13 +113,68 @@ const ProfilePage = () => {
     }, 1000);
   };
 
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          setPreviewImage(event.target.result);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfileImage = () => {
+    if (previewImage) {
+      setProfileImage(previewImage);
+      setPreviewImage(null);
+      
+      toast({
+        title: "Foto de perfil atualizada",
+        description: "Sua foto de perfil foi atualizada com sucesso.",
+      });
+    }
+  };
+
+  const handleSendVerification = () => {
+    setIsVerificationSent(true);
+    
+    toast({
+      title: "Código de verificação enviado",
+      description: "Um código de verificação foi enviado para o seu email.",
+    });
+  };
+
+  const handleVerifyEmail = () => {
+    // Simular verificação - em um app real, compararia com o código enviado por email
+    if (verificationCode === "123456") {
+      setIsEmailVerified(true);
+      setVerificationDialogOpen(false);
+      
+      toast({
+        title: "Email verificado",
+        description: "Seu email foi verificado com sucesso.",
+      });
+    } else {
+      toast({
+        title: "Código inválido",
+        description: "O código de verificação informado é inválido. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <div className="bg-gray-50 flex-1">
         <div className="container mx-auto px-4 lg:px-8 py-12">
-          <h1 className="text-3xl font-bold mb-8">Meu Perfil</h1>
+          <h1 className="text-3xl font-bold mb-8 animate-fade-in">Meu Perfil</h1>
           
           <Tabs defaultValue="tickets" className="space-y-8">
             <TabsList className="grid w-full grid-cols-3 bg-evently">
@@ -189,48 +263,152 @@ const ProfilePage = () => {
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-6">Informações Pessoais</h2>
                   
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome completo</Label>
-                      <Input
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
+                  <div className="flex flex-col md:flex-row gap-6 mb-6">
+                    <div className="flex flex-col items-center space-y-4">
+                      <Avatar className="h-32 w-32">
+                        {profileImage ? (
+                          <AvatarImage src={profileImage} alt={name} />
+                        ) : (
+                          <AvatarFallback className="text-3xl">
+                            {name.charAt(0)}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      
+                      <div className="flex flex-col space-y-2 items-center">
+                        <label htmlFor="profile-image" className="cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors">
+                            <Upload className="h-4 w-4" />
+                            <span>Alterar foto</span>
+                          </div>
+                          <input
+                            id="profile-image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleProfileImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                        
+                        {previewImage && (
+                          <Button
+                            onClick={handleSaveProfileImage}
+                            className="bg-evently hover:bg-evently-light"
+                            size="sm"
+                          >
+                            Salvar foto
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
+                    <div className="flex-1">
+                      <form onSubmit={handleUpdateProfile} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nome completo</Label>
+                          <Input
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Telefone</Label>
+                          <Input
+                            id="phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                          />
+                        </div>
+                        
+                        <Button type="submit" className="bg-evently hover:bg-evently-light" disabled={isUpdating}>
+                          {isUpdating ? "Atualizando..." : "Salvar alterações"}
+                        </Button>
+                      </form>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input
-                        id="phone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                      />
+                  </div>
+                  
+                  {previewImage && (
+                    <div className="mt-4 p-4 border rounded-md">
+                      <h3 className="font-medium mb-2">Pré-visualização</h3>
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={previewImage} alt="Preview" />
+                        </Avatar>
+                        <p className="text-sm text-gray-500">
+                          Clique em "Salvar foto" para confirmar a alteração
+                        </p>
+                      </div>
                     </div>
-                    
-                    <Button type="submit" className="bg-evently hover:bg-evently-light" disabled={isUpdating}>
-                      {isUpdating ? "Atualizando..." : "Salvar alterações"}
-                    </Button>
-                  </form>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
             
             {/* Security Tab */}
             <TabsContent value="security">
+              <Card className="mb-6">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Verificação de Email</h2>
+                    {isEmailVerified ? (
+                      <div className="flex items-center text-green-600">
+                        <Check className="h-5 w-5 mr-1" />
+                        <span>Email verificado</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-amber-600">
+                        <AlertTriangle className="h-5 w-5 mr-1" />
+                        <span>Não verificado</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4">
+                    {isEmailVerified 
+                      ? "Seu email foi verificado com sucesso. Você pode alterar sua senha quando quiser." 
+                      : "Para garantir a segurança da sua conta, verifique seu email antes de alterar sua senha."}
+                  </p>
+                  
+                  {!isEmailVerified && (
+                    <Button 
+                      className="bg-evently hover:bg-evently-light flex items-center space-x-2"
+                      onClick={() => {
+                        handleSendVerification();
+                        setVerificationDialogOpen(true);
+                      }}
+                      disabled={isVerificationSent}
+                    >
+                      <Mail className="h-4 w-4" />
+                      <span>{isVerificationSent ? "Código enviado" : "Verificar email"}</span>
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+              
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-6">Alterar Senha</h2>
+                  
+                  {!isEmailVerified && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+                      <p className="text-amber-700 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Verifique seu email antes de alterar sua senha
+                      </p>
+                    </div>
+                  )}
                   
                   <form onSubmit={handleUpdatePassword} className="space-y-4">
                     <div className="space-y-2">
@@ -241,6 +419,7 @@ const ProfilePage = () => {
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         required
+                        disabled={!isEmailVerified}
                       />
                     </div>
                     
@@ -252,6 +431,7 @@ const ProfilePage = () => {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
+                        disabled={!isEmailVerified}
                       />
                     </div>
                     
@@ -263,10 +443,15 @@ const ProfilePage = () => {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        disabled={!isEmailVerified}
                       />
                     </div>
                     
-                    <Button type="submit" className="bg-evently hover:bg-evently-light" disabled={isUpdating}>
+                    <Button 
+                      type="submit" 
+                      className="bg-evently hover:bg-evently-light" 
+                      disabled={isUpdating || !isEmailVerified}
+                    >
                       {isUpdating ? "Atualizando..." : "Atualizar senha"}
                     </Button>
                   </form>
@@ -276,6 +461,37 @@ const ProfilePage = () => {
           </Tabs>
         </div>
       </div>
+      
+      <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verificar seu email</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="mb-4 text-gray-600">
+              Digite o código de 6 dígitos enviado para {email}
+            </p>
+            <Input
+              placeholder="123456"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              className="text-center text-lg"
+              maxLength={6}
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Para fins de demonstração, o código correto é 123456
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVerificationDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button className="bg-evently hover:bg-evently-light" onClick={handleVerifyEmail}>
+              Verificar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>

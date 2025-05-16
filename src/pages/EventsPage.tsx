@@ -64,6 +64,61 @@ const allEvents = [
     price: "75,00",
     category: "Gastronomia",
   },
+  // Novos eventos
+  {
+    id: "7",
+    title: "Carnaval de Recife",
+    image: "https://images.unsplash.com/photo-1466442929976-97f336a657be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2834&q=80",
+    date: "10 Fev 2025",
+    location: "Recife, PE",
+    price: "Gratuito",
+    category: "Cultura",
+  },
+  {
+    id: "8",
+    title: "Feira Literária Internacional",
+    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    date: "18 Jul 2025",
+    location: "Paraty, RJ",
+    price: "35,00",
+    category: "Literatura",
+  },
+  {
+    id: "9",
+    title: "Festival de Cinema do Recife",
+    image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    date: "22 Ago 2025",
+    location: "Recife, PE",
+    price: "45,00",
+    category: "Cinema",
+  },
+  {
+    id: "10",
+    title: "Encontro de Forró",
+    image: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80",
+    date: "25 Jun 2025",
+    location: "Caruaru, PE",
+    price: "40,00",
+    category: "Música",
+  },
+  {
+    id: "11",
+    title: "Oktoberfest",
+    image: "https://images.unsplash.com/photo-1613127886612-40fc446adef0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    date: "10 Out 2025",
+    location: "Blumenau, SC",
+    price: "95,00",
+    category: "Festival",
+  },
+  {
+    id: "12",
+    title: "Feira de Artesanato",
+    image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    date: "05 Set 2025",
+    location: "Salvador, BA",
+    price: "Gratuito",
+    category: "Arte",
+  },
 ];
 
 const EventsPage = () => {
@@ -74,8 +129,8 @@ const EventsPage = () => {
   // Filtrar eventos
   const filteredEvents = allEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "" || event.category === selectedCategory;
-    const matchesLocation = selectedLocation === "" || event.location.includes(selectedLocation);
+    const matchesCategory = selectedCategory === "" || selectedCategory === "all" || event.category === selectedCategory;
+    const matchesLocation = selectedLocation === "" || selectedLocation === "all" || event.location.includes(selectedLocation);
     
     return matchesSearch && matchesCategory && matchesLocation;
   });
@@ -92,7 +147,12 @@ const EventsPage = () => {
       
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4 lg:px-8">
-          <h1 className="text-3xl font-bold mb-8">Eventos</h1>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-8 text-center md:text-left relative animate-fade-in">
+            <span className="inline-block relative after:content-[''] after:absolute after:w-full after:h-1 after:bg-evently after:bottom-0 after:left-0 after:scale-x-0 after:hover:scale-x-100 after:transition-transform after:duration-300">
+              Eventos
+            </span>
+            <span className="inline-block absolute -top-3 -right-3 text-evently text-base animate-pulse">em destaque</span>
+          </h1>
           
           {/* Filter Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
@@ -153,7 +213,7 @@ const EventsPage = () => {
           
           {/* Events Grid */}
           {filteredEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
               {filteredEvents.map((event) => (
                 <EventCard 
                   key={event.id} 
