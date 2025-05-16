@@ -114,7 +114,7 @@ const EventsPage = () => {
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas categorias</SelectItem>
+                    <SelectItem value="all">Todas categorias</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -128,7 +128,7 @@ const EventsPage = () => {
                     <SelectValue placeholder="Local" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos locais</SelectItem>
+                    <SelectItem value="all">Todos locais</SelectItem>
                     {locations.map(location => (
                       <SelectItem key={location} value={location}>{location}</SelectItem>
                     ))}
