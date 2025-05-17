@@ -72,13 +72,11 @@ const SubscriptionPage = () => {
                 onValueChange={setBillingCycle}
                 className="flex items-center space-x-4 bg-white p-1.5 rounded-lg border"
               >
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded cursor-pointer"
-                     className={billingCycle === "monthly" ? "bg-evently text-white rounded-md" : ""}>
+                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded cursor-pointer ${billingCycle === "monthly" ? "bg-evently text-white rounded-md" : ""}`}>
                   <RadioGroupItem value="monthly" id="monthly" className="sr-only" />
                   <Label htmlFor="monthly" className="cursor-pointer">Mensal</Label>
                 </div>
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded cursor-pointer"
-                     className={billingCycle === "annual" ? "bg-evently text-white rounded-md" : ""}>
+                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded cursor-pointer ${billingCycle === "annual" ? "bg-evently text-white rounded-md" : ""}`}>
                   <RadioGroupItem value="annual" id="annual" className="sr-only" />
                   <Label htmlFor="annual" className="cursor-pointer">Anual <Badge variant="outline" className="ml-1 bg-white text-evently">10% OFF</Badge></Label>
                 </div>
