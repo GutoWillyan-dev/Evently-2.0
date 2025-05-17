@@ -8,36 +8,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, MapPin, Ticket, Upload, Check, Mail, AlertTriangle, QrCode } from "lucide-react";
+import { Calendar, MapPin, Ticket, Upload, Check, Mail, AlertTriangle, QrCode, Coins } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-// Mock data for user tickets
-const userTickets = [
-  {
-    id: "ticket1",
-    eventName: "Festival de Música 2025",
-    date: "15 Mar 2025",
-    time: "19:00",
-    location: "São Paulo, SP",
-    ticketType: "VIP",
-    price: "R$ 150,00",
-    qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EVENTLY-TICKET-12345",
-    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-  },
-  {
-    id: "ticket2",
-    eventName: "Teatro Nacional",
-    date: "20 Mar 2025",
-    time: "20:30",
-    location: "Rio de Janeiro, RJ",
-    ticketType: "Standard",
-    price: "R$ 80,00",
-    qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EVENTLY-TICKET-67890",
-    image: "https://images.unsplash.com/photo-1503095396549-807759245b35?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80",
-  },
-];
+// Interface para o tipo de ingresso
+interface UserTicket {
+  id: string;
+  eventName: string;
+  date: string;
+  time: string;
+  location: string;
+  ticketType: string;
+  price: string;
+  qrCode: string;
+  image: string;
+}
 
 const ProfilePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,15 +42,18 @@ const ProfilePage = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isVerificationSent, setIsVerificationSent] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<null | typeof userTickets[0]>(null);
+  const [selectedTicket, setSelectedTicket] = useState<UserTicket | null>(null);
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [qrCodeExpiry, setQrCodeExpiry] = useState<Date | null>(null);
   const [remainingTime, setRemainingTime] = useState<string>("");
+  const [userPoints, setUserPoints] = useState(0);
+  const [userTickets, setUserTickets] = useState<UserTicket[]>([]);
   const { toast } = useToast();
   const initialTab = searchParams.get('tab') || 'tickets';
 
-  // Load user data from localStorage
+  // Carregar dados do usuário do localStorage
   useEffect(() => {
+    // Carregar dados de usuário
     const storedUser = localStorage.getItem("eventlyUser");
     if (storedUser) {
       const userData = JSON.parse(storedUser);
@@ -72,13 +62,20 @@ const ProfilePage = () => {
       setPhone(userData.phone || "");
       setProfileImage(userData.avatar || null);
       setIsEmailVerified(userData.emailVerified || false);
+      setUserPoints(userData.points || 0);
     } else {
-      // Redirect to login if no user data is found
+      // Redirecionar para login se não houver dados de usuário
       navigate('/login');
+    }
+
+    // Carregar ingressos do usuário
+    const storedTickets = localStorage.getItem("eventlyUserTickets");
+    if (storedTickets) {
+      setUserTickets(JSON.parse(storedTickets));
     }
   }, [navigate]);
 
-  // Handle countdown timer for QR code
+  // Gerenciar contador regressivo para o QR code
   useEffect(() => {
     let timer: number;
     
@@ -113,13 +110,13 @@ const ProfilePage = () => {
     e.preventDefault();
     setIsUpdating(true);
     
-    // Get current user data
+    // Obter dados atuais do usuário
     const storedUser = localStorage.getItem("eventlyUser");
     if (!storedUser) return;
     
     const userData = JSON.parse(storedUser);
     
-    // Update user data
+    // Atualizar dados do usuário
     const updatedUser = {
       ...userData,
       name,
@@ -128,10 +125,10 @@ const ProfilePage = () => {
       avatar: profileImage,
     };
     
-    // Save updated user data
+    // Salvar dados atualizados do usuário
     localStorage.setItem("eventlyUser", JSON.stringify(updatedUser));
     
-    // Simulate API call delay
+    // Simular atraso de chamada de API
     setTimeout(() => {
       setIsUpdating(false);
       toast({
@@ -164,22 +161,22 @@ const ProfilePage = () => {
     
     setIsUpdating(true);
     
-    // Get current user data
+    // Obter dados atuais do usuário
     const storedUser = localStorage.getItem("eventlyUser");
     if (!storedUser) return;
     
     const userData = JSON.parse(storedUser);
     
-    // Update user password (in a real app, this would be hashed)
+    // Atualizar senha do usuário (em uma aplicação real, isso seria hasheado)
     const updatedUser = {
       ...userData,
       password: newPassword,
     };
     
-    // Save updated user data
+    // Salvar dados atualizados do usuário
     localStorage.setItem("eventlyUser", JSON.stringify(updatedUser));
     
-    // Simulate API call delay
+    // Simular atraso de chamada de API
     setTimeout(() => {
       setIsUpdating(false);
       setCurrentPassword("");
@@ -212,7 +209,7 @@ const ProfilePage = () => {
     if (previewImage) {
       setProfileImage(previewImage);
       
-      // Get current user data and update avatar
+      // Obter dados atuais do usuário e atualizar avatar
       const storedUser = localStorage.getItem("eventlyUser");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
@@ -244,7 +241,7 @@ const ProfilePage = () => {
       setIsEmailVerified(true);
       setVerificationDialogOpen(false);
       
-      // Update user data with email verification status
+      // Atualizar dados do usuário com status de verificação de email
       const storedUser = localStorage.getItem("eventlyUser");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
@@ -265,11 +262,11 @@ const ProfilePage = () => {
     }
   };
 
-  const handleViewTicket = (ticket: typeof userTickets[0]) => {
+  const handleViewTicket = (ticket: UserTicket) => {
     setSelectedTicket(ticket);
     setTicketDialogOpen(true);
     
-    // Set QR code expiry time to 1 hour from now
+    // Definir tempo de expiração do QR code para 1 hora a partir de agora
     const expiry = new Date();
     expiry.setHours(expiry.getHours() + 1);
     setQrCodeExpiry(expiry);
@@ -290,9 +287,24 @@ const ProfilePage = () => {
               <TabsTrigger value="security">Segurança</TabsTrigger>
             </TabsList>
             
-            {/* Tickets Tab */}
+            {/* Aba de Ingressos */}
             <TabsContent value="tickets" className="space-y-8">
-              <h2 className="text-xl font-semibold mb-4">Meus Ingressos</h2>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Meus Ingressos</h2>
+                
+                {/* Exibição de pontos */}
+                <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white py-2 px-4 rounded-lg shadow flex items-center">
+                  <Coins className="h-5 w-5 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium">Seus pontos</p>
+                    <p className="text-lg font-bold">{userPoints} pontos</p>
+                  </div>
+                  <div className="ml-3 border-l border-white/30 pl-3">
+                    <p className="text-xs">Valor em descontos</p>
+                    <p className="font-semibold">R$ {(userPoints * 0.10).toFixed(2).replace('.', ',')}</p>
+                  </div>
+                </div>
+              </div>
               
               {userTickets.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -360,7 +372,7 @@ const ProfilePage = () => {
               )}
             </TabsContent>
             
-            {/* Profile Tab */}
+            {/* Aba de Perfil */}
             <TabsContent value="profile">
               <Card>
                 <CardContent className="p-6">
@@ -459,7 +471,7 @@ const ProfilePage = () => {
               </Card>
             </TabsContent>
             
-            {/* Security Tab */}
+            {/* Aba de Segurança */}
             <TabsContent value="security">
               <Card className="mb-6">
                 <CardContent className="p-6">
@@ -565,7 +577,7 @@ const ProfilePage = () => {
         </div>
       </div>
       
-      {/* Email Verification Dialog */}
+      {/* Diálogo de Verificação de Email */}
       <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -597,7 +609,7 @@ const ProfilePage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Ticket View Dialog */}
+      {/* Diálogo de Visualização do Ingresso */}
       <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

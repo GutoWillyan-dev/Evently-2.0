@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, Info, Ticket, Users, Star } from "lucide-react";
+import { Calendar, Clock, MapPin, Info, Ticket, Users, Star, Coins } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
-// Mock data for event details
+// Dados simulados para os detalhes dos eventos
 const events = {
   "1": {
     id: "1",
@@ -64,28 +65,65 @@ const events = {
     ],
     specialEvent: false,
   },
+  "4": {
+    id: "4",
+    title: "Show de Comédia",
+    image: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    date: "10 Abr 2025",
+    time: "21:00 - 23:00",
+    location: "Teatro Renault",
+    address: "Av. Brigadeiro Luís Antônio, 411 - República, São Paulo - SP",
+    description: "Uma noite de muitas risadas com os melhores comediantes do Brasil. Um espetáculo imperdível para quem quer relaxar e se divertir com amigos.",
+    organizer: "Risada Produções",
+    categories: ["Comédia", "Entretenimento", "Show"],
+    ticketOptions: [
+      { id: "t1", type: "Entrada Comum", price: "75,00", remaining: 120 },
+      { id: "t2", type: "VIP", price: "130,00", remaining: 40 },
+    ],
+    specialEvent: true,
+  },
+  "5": {
+    id: "5",
+    title: "Feira Gastronômica Internacional",
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    date: "05 Mai 2025",
+    time: "11:00 - 22:00",
+    location: "Parque Villa-Lobos",
+    address: "Av. Prof. Fonseca Rodrigues, 2001 - Alto de Pinheiros, São Paulo - SP",
+    description: "Uma experiência gastronômica incrível com pratos típicos de mais de 20 países. Uma oportunidade única para experimentar sabores de todo o mundo sem sair do Brasil.",
+    organizer: "Sabores do Mundo",
+    categories: ["Gastronomia", "Feira", "Cultura"],
+    ticketOptions: [
+      { id: "t1", type: "Entrada Padrão", price: "35,00", remaining: 350 },
+      { id: "t2", type: "Pacote Degustação", price: "90,00", remaining: 100 },
+    ],
+    specialEvent: false,
+  },
 };
 
 // Função para calcular desconto baseado na assinatura e quantidade de ingressos
-const calculateDiscount = (subscription: string | null, quantity: number, originalPrice: number): { 
+const calculateDiscount = (subscription: string | null, quantity: number, originalPrice: number, userPoints: number = 0, usePoints: boolean = false): { 
   discountPercentage: number, 
   finalPrice: number, 
   freeTickets: number,
   isVipUpgrade: boolean,
-  specialEvent: boolean
+  specialEvent: boolean,
+  pointsDiscount: number,
+  remainingPoints: number
 } => {
   let discountPercentage = 0;
   let freeTickets = 0;
   let isVipUpgrade = false;
   let specialEvent = false;
+  let pointsDiscount = 0;
+  let remainingPoints = userPoints;
   
+  // Cálculo dos descontos baseados no tipo de assinatura
   if (subscription === "standard") {
     if (quantity === 1) {
       discountPercentage = 15;
-    } else if (quantity === 2) {
-      discountPercentage = 30;
-    } else {
-      discountPercentage = 40;
+    } else if (quantity >= 2) {
+      discountPercentage = 30; // Agora todos os ingressos a partir de 2 têm 30% de desconto
     }
   } else if (subscription === "premium") {
     discountPercentage = 20;
@@ -99,15 +137,30 @@ const calculateDiscount = (subscription: string | null, quantity: number, origin
     isVipUpgrade = true;
   }
   
+  // Cálculo do desconto baseado na porcentagem
   const discountAmount = (originalPrice * discountPercentage) / 100;
-  const finalPrice = originalPrice - discountAmount;
+  let finalPrice = originalPrice - discountAmount;
+  
+  // Aplicar desconto de pontos se solicitado
+  if (usePoints && userPoints > 0) {
+    // Cada ponto vale R$ 0,10
+    const maxPointsDiscount = Math.min(userPoints * 0.10, finalPrice * 0.5); // Limita o desconto a 50% do valor
+    pointsDiscount = maxPointsDiscount;
+    finalPrice -= pointsDiscount;
+    
+    // Calcula quantos pontos foram usados (1 ponto = R$ 0,10)
+    const pointsUsed = Math.ceil(pointsDiscount / 0.10);
+    remainingPoints = Math.max(0, userPoints - pointsUsed);
+  }
   
   return { 
     discountPercentage, 
     finalPrice, 
     freeTickets,
     isVipUpgrade,
-    specialEvent
+    specialEvent,
+    pointsDiscount,
+    remainingPoints
   };
 };
 
@@ -116,16 +169,17 @@ const EventDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get event details from mock data
+  // Busca detalhes do evento a partir dos dados simulados
   const event = id ? events[id as keyof typeof events] : undefined;
   
   const [selectedTicket, setSelectedTicket] = useState(event?.ticketOptions[0]?.id || "");
   const [quantity, setQuantity] = useState("1");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; subscription?: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string; subscription?: string; points?: number } | null>(null);
+  const [usePoints, setUsePoints] = useState(false);
   
-  // Load user data from localStorage
+  // Carregar dados do usuário do localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("eventlyUser");
     if (storedUser) {
@@ -133,7 +187,7 @@ const EventDetailPage = () => {
     }
   }, []);
   
-  // Handle case where event is not found
+  // Tratar caso em que o evento não é encontrado
   if (!event) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -167,45 +221,116 @@ const EventDetailPage = () => {
     setTimeout(() => {
       setIsProcessing(false);
       
+      // Obter o ticket selecionado
+      const ticketOption = event.ticketOptions.find(ticket => ticket.id === selectedTicket);
+      if (!ticketOption) return;
+      
+      // Calcular o preço com desconto
+      const originalPrice = parseFloat(ticketOption.price.replace(',', '.'));
+      const quantityNum = parseInt(quantity);
+      
+      // Calcular desconto com pontos
+      const userPoints = user?.points || 0;
+      const { finalPrice, remainingPoints } = calculateDiscount(
+        user?.subscription || null, 
+        quantityNum, 
+        originalPrice,
+        userPoints,
+        usePoints
+      );
+      
+      // Calcular pontos ganhos (1 ponto por real gasto)
+      const totalPrice = finalPrice * quantityNum;
+      const pointsEarned = Math.floor(totalPrice);
+      
+      // Atualizar pontos do usuário no localStorage
+      if (user) {
+        const updatedUser = {
+          ...user,
+          points: usePoints ? remainingPoints + pointsEarned : (user.points || 0) + pointsEarned
+        };
+        localStorage.setItem("eventlyUser", JSON.stringify(updatedUser));
+        
+        // Adicionar o ingresso à lista de ingressos do usuário
+        const newTicket = {
+          id: `ticket${Date.now()}`,
+          eventName: event.title,
+          date: event.date,
+          time: event.time.split(" - ")[0],
+          location: `${event.location}, ${event.address.split(",")[1]}`,
+          ticketType: ticketOption.type,
+          price: `R$ ${finalPrice.toFixed(2).replace('.', ',')}`,
+          qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EVENTLY-TICKET-${Date.now()}`,
+          image: event.image,
+        };
+        
+        // Buscar ingressos existentes ou criar nova lista
+        const storedTickets = localStorage.getItem("eventlyUserTickets");
+        const userTickets = storedTickets ? JSON.parse(storedTickets) : [];
+        
+        // Adicionar novo ingresso
+        userTickets.push(newTicket);
+        localStorage.setItem("eventlyUserTickets", JSON.stringify(userTickets));
+      }
+      
       toast({
         title: "Ingresso comprado com sucesso!",
         description: `Você comprou ${quantity} ingresso(s) para ${event.title}.`,
       });
       
       // Redirecionar para a página de perfil (ingressos)
-      navigate("/perfil");
+      navigate("/perfil?tab=tickets");
     }, 2000);
   };
   
-  // Find selected ticket details
+  // Encontrar detalhes do ingresso selecionado
   const ticketOption = event.ticketOptions.find(ticket => ticket.id === selectedTicket);
   
   const originalPrice = ticketOption ? parseFloat(ticketOption.price.replace(',', '.')) : 0;
   const quantityNum = parseInt(quantity);
+  const userPoints = user?.points || 0;
   
   // Calcular preço com desconto baseado na assinatura
   const { 
     discountPercentage, 
     finalPrice, 
     freeTickets, 
-    isVipUpgrade 
-  } = calculateDiscount(user?.subscription || null, quantityNum, originalPrice);
+    isVipUpgrade,
+    pointsDiscount
+  } = calculateDiscount(
+    user?.subscription || null, 
+    quantityNum, 
+    originalPrice,
+    userPoints,
+    usePoints
+  );
   
   // Total sem desconto
   const subtotal = originalPrice * quantityNum;
   
   // Total com desconto (e ingressos grátis)
-  const totalWithDiscount = finalPrice * (quantityNum - freeTickets);
+  let totalWithDiscount = finalPrice * (quantityNum - freeTickets);
+  
+  // Aplicar desconto de pontos
+  if (usePoints && userPoints > 0) {
+    totalWithDiscount -= pointsDiscount * (quantityNum - freeTickets);
+  }
   
   // Economia total
   const totalSavings = subtotal - totalWithDiscount;
+  
+  // Pontos que serão ganhos com a compra
+  const pointsToEarn = Math.floor(totalWithDiscount);
+  
+  // Máximo de desconto que pode ser aplicado usando pontos (em reais)
+  const maxPointsDiscountValue = userPoints * 0.10;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <div className="bg-gray-50 flex-1">
-        {/* Event Hero */}
+        {/* Imagem do Evento */}
         <div 
           className="w-full h-96 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${event.image})` }}
@@ -234,10 +359,10 @@ const EventDetailPage = () => {
           </div>
         </div>
         
-        {/* Event Content */}
+        {/* Conteúdo do Evento */}
         <div className="container mx-auto px-4 lg:px-8 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Event Details */}
+            {/* Detalhes do Evento */}
             <div className="lg:col-span-2 space-y-8">
               <Card>
                 <CardContent className="p-6">
@@ -268,7 +393,7 @@ const EventDetailPage = () => {
                 </CardContent>
               </Card>
               
-              {/* Event Categories */}
+              {/* Categorias do Evento */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">Categorias</h3>
                 <div className="flex flex-wrap gap-2">
@@ -284,7 +409,7 @@ const EventDetailPage = () => {
               </div>
             </div>
             
-            {/* Ticket Purchase */}
+            {/* Compra de Ingressos */}
             <div>
               <Card className="sticky top-4">
                 <CardContent className="p-6">
@@ -293,7 +418,7 @@ const EventDetailPage = () => {
                     <h2 className="text-xl font-semibold">Ingressos</h2>
                   </div>
                   
-                  {/* Subscription Status Banner */}
+                  {/* Banner de Status da Assinatura */}
                   {user?.subscription && (
                     <div className={`mb-4 p-3 rounded-lg ${user.subscription === 'premium' ? 'bg-purple-100 border border-purple-300' : 'bg-blue-100 border border-blue-300'}`}>
                       <div className="flex items-center">
@@ -320,14 +445,14 @@ const EventDetailPage = () => {
                     </div>
                   )}
                   
-                  {/* Subscription Prompt */}
+                  {/* Prompt de Assinatura */}
                   {showSubscriptionPrompt && !user?.subscription && (
                     <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <h3 className="font-semibold flex items-center">
                         <Star className="h-4 w-4 text-yellow-500 mr-2" />
                         Economize com uma assinatura!
                       </h3>
-                      <p className="text-sm mt-2">Assinantes economizam até 40% na compra de ingressos e ganham benefícios exclusivos.</p>
+                      <p className="text-sm mt-2">Assinantes economizam até 30% na compra de ingressos e ganham benefícios exclusivos.</p>
                       <div className="mt-3 space-y-2">
                         <Link to="/assinaturas">
                           <Button className="w-full bg-evently hover:bg-evently-light">
@@ -378,6 +503,30 @@ const EventDetailPage = () => {
                       </Select>
                     </div>
                     
+                    {/* Opção para usar pontos (apenas para usuários logados com pontos) */}
+                    {user && userPoints > 0 && ticketOption && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium flex items-center">
+                            <input 
+                              type="checkbox" 
+                              checked={usePoints} 
+                              onChange={() => setUsePoints(!usePoints)}
+                              className="mr-2 h-4 w-4"
+                            />
+                            Usar pontos para desconto
+                          </label>
+                          <div className="flex items-center text-sm">
+                            <Coins className="h-4 w-4 text-yellow-500 mr-1" />
+                            <span>{userPoints} pontos</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Você pode usar até R$ {maxPointsDiscountValue.toFixed(2).replace('.', ',')} em desconto com seus pontos.
+                        </p>
+                      </div>
+                    )}
+                    
                     {ticketOption && (
                       <div className="mt-6 py-4 border-t border-b">
                         <div className="flex justify-between mb-2">
@@ -405,10 +554,18 @@ const EventDetailPage = () => {
                           </div>
                         )}
                         
+                        {/* Desconto dos pontos */}
+                        {usePoints && pointsDiscount > 0 && (
+                          <div className="flex justify-between mb-2 text-amber-600">
+                            <span>Desconto de pontos:</span>
+                            <span>- R$ {(pointsDiscount * (quantityNum - freeTickets)).toFixed(2).replace('.', ',')}</span>
+                          </div>
+                        )}
+                        
                         <div className="flex justify-between font-semibold mt-2 pt-2 border-t">
                           <span>Total:</span>
                           <span>
-                            {user?.subscription ? (
+                            {user?.subscription || usePoints ? (
                               <>
                                 {subtotal !== totalWithDiscount && (
                                   <span className="line-through text-gray-400 text-sm mr-2">
@@ -430,7 +587,7 @@ const EventDetailPage = () => {
                       <div className="bg-gray-50 p-3 rounded-lg text-sm">
                         <p className="flex items-center">
                           <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          Você ganhará aproximadamente {Math.floor(totalWithDiscount)} pontos com esta compra.
+                          Você ganhará aproximadamente {pointsToEarn} pontos com esta compra.
                         </p>
                       </div>
                     )}

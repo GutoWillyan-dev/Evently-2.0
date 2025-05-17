@@ -30,11 +30,12 @@ const SubscriptionPage = () => {
         description: `Você assinou o plano ${plan}.`,
       });
       
-      // Simular dados do usuário logado com a assinatura
+      // Simular dados do usuário logado com a assinatura e pontos
       const userData = {
         name: "Usuário",
         email: "usuario@exemplo.com",
-        subscription: plan.toLowerCase()
+        subscription: plan.toLowerCase(),
+        points: 0 // Inicializa pontos como zero para novos assinantes
       };
       
       localStorage.setItem("eventlyUser", JSON.stringify(userData));
@@ -103,11 +104,7 @@ const SubscriptionPage = () => {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span>30% de desconto na compra de 2 ingressos</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span>40% de desconto na compra de 3 ou mais ingressos</span>
+                    <span>30% de desconto na compra de 2 ou mais ingressos</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
