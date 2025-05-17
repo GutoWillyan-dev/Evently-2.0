@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, Edit, LogOut } from "lucide-react";
+import { Search, User, Edit, LogOut, Star } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 // Mock user state (in a real app, this would come from authentication context)
 interface User {
@@ -20,6 +21,7 @@ interface User {
   email: string;
   avatar?: string;
   phone?: string;
+  subscription?: string;
 }
 
 const Navbar = () => {
@@ -66,6 +68,14 @@ const Navbar = () => {
           <Link to="/eventos" className="text-white hover:text-gray-200">
             Eventos
           </Link>
+          <Link to="/assinaturas" className="text-white hover:text-gray-200 flex items-center">
+            Assinaturas
+            {user?.subscription && (
+              <Badge className="ml-2 bg-white text-evently">
+                {user.subscription === 'premium' ? 'Premium' : 'Standard'}
+              </Badge>
+            )}
+          </Link>
           <Link to="/sobre" className="text-white hover:text-gray-200">
             Sobre
           </Link>
@@ -103,6 +113,17 @@ const Navbar = () => {
                   <Edit className="mr-2 h-4 w-4" />
                   <span>Editar Perfil</span>
                 </DropdownMenuItem>
+                {user?.subscription ? (
+                  <DropdownMenuItem onClick={() => navigate("/assinaturas")}>
+                    <Star className="mr-2 h-4 w-4" />
+                    <span>Gerenciar Assinatura</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => navigate("/assinaturas")}>
+                    <Star className="mr-2 h-4 w-4" />
+                    <span>Assinar Evently</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>

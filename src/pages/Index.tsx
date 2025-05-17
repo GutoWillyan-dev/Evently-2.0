@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Calendar, MapPin, Ticket } from "lucide-react";
+import { Calendar, MapPin, Ticket, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EventCard from "@/components/EventCard";
@@ -47,9 +47,33 @@ const HomePage = () => {
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Descubra eventos incríveis</h1>
             <p className="text-xl mb-6">Encontre e compre ingressos para os melhores eventos da sua região</p>
-            <Link to="/eventos">
-              <Button size="lg" className="bg-evently hover:bg-evently-light text-white">
-                Explorar Eventos
+            <div className="flex flex-wrap gap-4">
+              <Link to="/eventos">
+                <Button size="lg" className="bg-evently hover:bg-evently-light text-white">
+                  Explorar Eventos
+                </Button>
+              </Link>
+              <Link to="/assinaturas">
+                <Button size="lg" variant="outline" className="bg-white text-evently hover:bg-gray-100 border-2 border-evently">
+                  <Star className="mr-1" /> Assine e Economize
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Subscription Banner */}
+      <section className="bg-evently text-white py-6">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-4 md:mb-0">
+              <h3 className="font-bold text-xl">Assine a Evently e economize em todos os eventos!</h3>
+              <p>Descontos exclusivos, benefícios especiais e muito mais.</p>
+            </div>
+            <Link to="/assinaturas">
+              <Button className="bg-white text-evently hover:bg-gray-100">
+                <Star className="mr-1" /> Ver planos a partir de R$ 15,90
               </Button>
             </Link>
           </div>

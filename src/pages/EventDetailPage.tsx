@@ -1,13 +1,14 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, Info, Ticket, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Info, Ticket, Users, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 // Mock data for event details
 const events = {
@@ -27,6 +28,7 @@ const events = {
       { id: "t2", type: "VIP", price: "300,00", remaining: 50 },
       { id: "t3", type: "Premium", price: "500,00", remaining: 20 },
     ],
+    specialEvent: true,
   },
   "2": {
     id: "2",
@@ -43,6 +45,7 @@ const events = {
       { id: "t1", type: "Plateia", price: "80,00", remaining: 100 },
       { id: "t2", type: "Camarote", price: "120,00", remaining: 30 },
     ],
+    specialEvent: false,
   },
   "3": {
     id: "3",
@@ -59,7 +62,53 @@ const events = {
       { id: "t1", type: "Entrada Regular", price: "45,00", remaining: 200 },
       { id: "t2", type: "Entrada com Guia", price: "65,00", remaining: 50 },
     ],
+    specialEvent: false,
   },
+};
+
+// Função para calcular desconto baseado na assinatura e quantidade de ingressos
+const calculateDiscount = (subscription: string | null, quantity: number, originalPrice: number): { 
+  discountPercentage: number, 
+  finalPrice: number, 
+  freeTickets: number,
+  isVipUpgrade: boolean,
+  specialEvent: boolean
+} => {
+  let discountPercentage = 0;
+  let freeTickets = 0;
+  let isVipUpgrade = false;
+  let specialEvent = false;
+  
+  if (subscription === "standard") {
+    if (quantity === 1) {
+      discountPercentage = 15;
+    } else if (quantity === 2) {
+      discountPercentage = 30;
+    } else {
+      discountPercentage = 40;
+    }
+  } else if (subscription === "premium") {
+    discountPercentage = 20;
+    
+    // A cada 2 ingressos, o terceiro é grátis (em eventos especiais)
+    if (specialEvent && quantity >= 3) {
+      freeTickets = Math.floor(quantity / 3);
+    }
+    
+    // Upgrade para VIP pelo preço de ingresso normal
+    isVipUpgrade = true;
+  }
+  
+  const discountAmount = (originalPrice * discountPercentage) / 100;
+  const finalPrice = originalPrice - discountAmount;
+  
+  return { 
+    discountPercentage, 
+    finalPrice, 
+    freeTickets,
+    isVipUpgrade,
+    specialEvent
+  };
 };
 
 const EventDetailPage = () => {
@@ -73,6 +122,16 @@ const EventDetailPage = () => {
   const [selectedTicket, setSelectedTicket] = useState(event?.ticketOptions[0]?.id || "");
   const [quantity, setQuantity] = useState("1");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string; subscription?: string } | null>(null);
+  
+  // Load user data from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("eventlyUser");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
   
   // Handle case where event is not found
   if (!event) {
@@ -97,6 +156,11 @@ const EventDetailPage = () => {
   }
   
   const handlePurchase = () => {
+    if (!user && !showSubscriptionPrompt) {
+      setShowSubscriptionPrompt(true);
+      return;
+    }
+    
     setIsProcessing(true);
     
     // Simulação de processamento de compra
@@ -115,6 +179,26 @@ const EventDetailPage = () => {
   
   // Find selected ticket details
   const ticketOption = event.ticketOptions.find(ticket => ticket.id === selectedTicket);
+  
+  const originalPrice = ticketOption ? parseFloat(ticketOption.price.replace(',', '.')) : 0;
+  const quantityNum = parseInt(quantity);
+  
+  // Calcular preço com desconto baseado na assinatura
+  const { 
+    discountPercentage, 
+    finalPrice, 
+    freeTickets, 
+    isVipUpgrade 
+  } = calculateDiscount(user?.subscription || null, quantityNum, originalPrice);
+  
+  // Total sem desconto
+  const subtotal = originalPrice * quantityNum;
+  
+  // Total com desconto (e ingressos grátis)
+  const totalWithDiscount = finalPrice * (quantityNum - freeTickets);
+  
+  // Economia total
+  const totalSavings = subtotal - totalWithDiscount;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -142,6 +226,9 @@ const EventDetailPage = () => {
                   <MapPin className="h-5 w-5 mr-2" />
                   <span>{event.location}</span>
                 </div>
+                {event.specialEvent && (
+                  <Badge className="bg-yellow-500">Evento Especial</Badge>
+                )}
               </div>
             </div>
           </div>
@@ -206,6 +293,58 @@ const EventDetailPage = () => {
                     <h2 className="text-xl font-semibold">Ingressos</h2>
                   </div>
                   
+                  {/* Subscription Status Banner */}
+                  {user?.subscription && (
+                    <div className={`mb-4 p-3 rounded-lg ${user.subscription === 'premium' ? 'bg-purple-100 border border-purple-300' : 'bg-blue-100 border border-blue-300'}`}>
+                      <div className="flex items-center">
+                        <Star className={`h-4 w-4 ${user.subscription === 'premium' ? 'text-purple-600' : 'text-blue-600'} mr-2`} />
+                        <span className="font-medium">
+                          Plano {user.subscription === 'premium' ? 'Premium' : 'Standard'} ativo
+                        </span>
+                      </div>
+                      {discountPercentage > 0 && (
+                        <div className="text-sm mt-1">
+                          {discountPercentage}% de desconto aplicado
+                        </div>
+                      )}
+                      {freeTickets > 0 && (
+                        <div className="text-sm mt-1 text-green-700">
+                          {freeTickets} ingresso(s) grátis incluído(s)!
+                        </div>
+                      )}
+                      {isVipUpgrade && user.subscription === 'premium' && (
+                        <div className="text-sm mt-1">
+                          Elegível para upgrade VIP sem custo adicional
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Subscription Prompt */}
+                  {showSubscriptionPrompt && !user?.subscription && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h3 className="font-semibold flex items-center">
+                        <Star className="h-4 w-4 text-yellow-500 mr-2" />
+                        Economize com uma assinatura!
+                      </h3>
+                      <p className="text-sm mt-2">Assinantes economizam até 40% na compra de ingressos e ganham benefícios exclusivos.</p>
+                      <div className="mt-3 space-y-2">
+                        <Link to="/assinaturas">
+                          <Button className="w-full bg-evently hover:bg-evently-light">
+                            Ver planos de assinatura
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="outline"
+                          className="w-full" 
+                          onClick={() => setShowSubscriptionPrompt(false)}
+                        >
+                          Continuar sem assinar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Tipo de Ingresso</label>
@@ -249,10 +388,50 @@ const EventDetailPage = () => {
                           <span className="text-gray-600">Quantidade:</span>
                           <span>{quantity}</span>
                         </div>
-                        <div className="flex justify-between font-semibold">
+                        
+                        {/* Detalhes do desconto caso seja assinante */}
+                        {user?.subscription && discountPercentage > 0 && (
+                          <div className="flex justify-between mb-2 text-green-600">
+                            <span>Desconto ({discountPercentage}%):</span>
+                            <span>- R$ {totalSavings.toFixed(2).replace('.', ',')}</span>
+                          </div>
+                        )}
+                        
+                        {/* Ingressos grátis para assinantes premium */}
+                        {user?.subscription === 'premium' && freeTickets > 0 && (
+                          <div className="flex justify-between mb-2 text-green-600 font-medium">
+                            <span>Ingressos grátis:</span>
+                            <span>{freeTickets}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between font-semibold mt-2 pt-2 border-t">
                           <span>Total:</span>
-                          <span>R$ {(parseFloat(ticketOption.price.replace(',', '.')) * parseInt(quantity)).toFixed(2).replace('.', ',')}</span>
+                          <span>
+                            {user?.subscription ? (
+                              <>
+                                {subtotal !== totalWithDiscount && (
+                                  <span className="line-through text-gray-400 text-sm mr-2">
+                                    R$ {subtotal.toFixed(2).replace('.', ',')}
+                                  </span>
+                                )}
+                                R$ {totalWithDiscount.toFixed(2).replace('.', ',')}
+                              </>
+                            ) : (
+                              `R$ ${(parseFloat(ticketOption.price.replace(',', '.')) * parseInt(quantity)).toFixed(2).replace('.', ',')}`
+                            )}
+                          </span>
                         </div>
+                      </div>
+                    )}
+                    
+                    {/* Informação sobre pontos ganhos */}
+                    {user?.subscription && ticketOption && (
+                      <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                        <p className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          Você ganhará aproximadamente {Math.floor(totalWithDiscount)} pontos com esta compra.
+                        </p>
                       </div>
                     )}
                     
