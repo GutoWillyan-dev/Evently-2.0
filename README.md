@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+🎉 Evently - Plataforma de Eventos
 
-## Project info
 
-**URL**: https://lovable.dev/projects/fadfadd6-7029-4f33-962d-68af107cfa2b
 
-## How can I edit this code?
+Evently é uma plataforma moderna para encontrar, gerenciar e participar de eventos. Com uma interface intuitiva e funcionalidades práticas, o Evently conecta usuários a experiências únicas de forma rápida e segura.
 
-There are several ways of editing your application.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/fadfadd6-7029-4f33-962d-68af107cfa2b) and start prompting.
+📸 Preview
 
-Changes made via Lovable will be committed automatically to this repo.
+![Captura de tela 2025-04-25 072957](https://github.com/user-attachments/assets/be412214-dee7-4cc1-9d5c-3dd4ff12eaf4)
+![Captura de tela 2025-04-25 073006](https://github.com/user-attachments/assets/59f58bbe-b332-46d0-82ac-46e617cff1a6)
 
-**Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Follow these steps:
+✨ Funcionalidades
+🔍 Pesquisa rápida de eventos
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+🗺️ Exploração de eventos por categorias
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+👤 Cadastro e login de usuários
 
-# Step 3: Install the necessary dependencies.
-npm i
+🎟️ Visualização e compra de ingressos
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+🧾 Gerenciamento de eventos pessoais
+
+📱 Layout responsivo para dispositivos móveis
+
+🛠️ Tecnologias utilizadas
+React — Biblioteca JavaScript para interfaces
+
+Vite — Build tool ultrarrápido
+
+TailwindCSS — Estilização moderna e eficiente
+
+React Router — Gerenciamento de rotas
+
+Lucide React — Ícones modernos e leves
+
+🚀 Como rodar o projeto localmente
+Clone o repositório e siga os passos abaixo:
+
+bash
+Copiar
+Editar
+# Clone o repositório
+git clone https://github.com/SEU_USUARIO/evently.git
+
+# Acesse a pasta do projeto
+cd evently
+
+# Instale as dependências
+npm install
+
+# Rode o servidor de desenvolvimento
 npm run dev
-```
+O projeto estará disponível em http://localhost:5173.
 
-**Edit a file directly in GitHub**
+📦 Estrutura de Pastas
+src/
+ ├── assets/         # Imagens e logos
+ ├── components/     # Componentes reutilizáveis (Navbar, Footer, etc)
+ ├── pages/          # Páginas principais (Home, Eventos, Sobre)
+ ├── routes/         # Configuração de rotas
+ ├── App.jsx         # Componente principal
+ └── main.jsx        # Ponto de entrada
+ 
+📝 Licença
+Este projeto está licenciado sob a licença MIT.
+Sinta-se livre para utilizar, modificar e distribuir este projeto!
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/fadfadd6-7029-4f33-962d-68af107cfa2b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
