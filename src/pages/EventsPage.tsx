@@ -60,8 +60,8 @@ const allEvents = [
     title: "Festival Gastronômico",
     image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1187&q=80",
     date: "12 Jun 2025",
-    location: "Brasília, DF",
-    price: "75,00",
+    location: "São Paulo, SP",
+    price: "35,00",
     category: "Gastronomia",
   },
   // Novos eventos
@@ -154,7 +154,7 @@ const EventsPage = () => {
             <span className="inline-block absolute -top-3 -right-3 text-evently text-base animate-pulse">em destaque</span>
           </h1>
           
-          {/* Filter Section */}
+          {/* Filtro selecionado */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
@@ -211,7 +211,7 @@ const EventsPage = () => {
             </div>
           </div>
           
-          {/* Events Grid */}
+          {/* Grade de eventos */}
           {filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
               {filteredEvents.map((event) => (

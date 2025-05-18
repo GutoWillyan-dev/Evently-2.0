@@ -77,34 +77,37 @@ const ProfilePage = () => {
 
   // Gerenciar contador regressivo para o QR code
   useEffect(() => {
-    let timer: number;
-    
-    if (qrCodeExpiry) {
-      timer = window.setInterval(() => {
-        const now = new Date();
-        const diff = qrCodeExpiry.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          clearInterval(timer);
-          setTicketDialogOpen(false);
-          toast({
-            title: "QR Code expirado",
-            description: "O QR Code expirou. Por favor, gere um novo.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        const minutes = Math.floor(diff / 1000 / 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        setRemainingTime(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
-      }, 1000);
-    }
-    
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [qrCodeExpiry, toast]);
+  let timer: number;
+  
+  if (qrCodeExpiry) {
+    const expiryTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos a partir do momento atual
+
+    timer = window.setInterval(() => {
+      const now = new Date();
+      const diff = expiryTime.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        clearInterval(timer);
+        setTicketDialogOpen(false);
+        toast({
+          title: "QR Code expirado",
+          description: "O QR Code expirou. Por favor, gere um novo.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const minutes = Math.floor(diff / 1000 / 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setRemainingTime(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+    }, 1000);
+  }
+  
+  return () => {
+    if (timer) clearInterval(timer);
+  };
+}, [qrCodeExpiry, toast]);
+
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,10 +269,10 @@ const ProfilePage = () => {
     setSelectedTicket(ticket);
     setTicketDialogOpen(true);
     
-    // Definir tempo de expiração do QR code para 1 hora a partir de agora
-    const expiry = new Date();
-    expiry.setHours(expiry.getHours() + 1);
-    setQrCodeExpiry(expiry);
+   // Definir tempo de expiração do QR code para 5 minutos a partir de agora
+const expiry = new Date();
+expiry.setMinutes(expiry.getMinutes() + 5);
+setQrCodeExpiry(expiry);
   };
 
   return (
@@ -675,7 +678,7 @@ const ProfilePage = () => {
                   Apresente este QR Code na entrada do evento.
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  O QR Code expira automaticamente após 1 hora.
+                  O QR Code expira automaticamente após 5 minutos.
                 </p>
               </div>
             </div>

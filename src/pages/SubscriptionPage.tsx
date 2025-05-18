@@ -51,7 +51,7 @@ const SubscriptionPage = () => {
 
   // Preços dos planos
   const prices = {
-    standard: billingCycle === "monthly" ? 15.90 : 15.90 * 10.8, // 10% desconto anual
+    standard: billingCycle === "monthly" ? 18.90 : 18.90 * 10.8, // 10% desconto anual
     premium: billingCycle === "monthly" ? 39.90 : 39.90 * 10.8 // 10% desconto anual
   };
 
