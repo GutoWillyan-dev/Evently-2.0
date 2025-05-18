@@ -8,8 +8,14 @@ Evently é uma plataforma moderna para encontrar, gerenciar e participar de even
 
 📸 Preview
 
-![Captura de tela 2025-04-25 072957](https://github.com/user-attachments/assets/be412214-dee7-4cc1-9d5c-3dd4ff12eaf4)
-![Captura de tela 2025-04-25 073006](https://github.com/user-attachments/assets/59f58bbe-b332-46d0-82ac-46e617cff1a6)
+![Captura de tela 2025-04-25 072957](![image](https://github.com/user-attachments/assets/1465abae-c5f6-47b8-918b-6d79ec13d586)
+![Captura de tela 2025-04-25 073006](![image](https://github.com/user-attachments/assets/5b58cfbe-cb55-4814-984b-87d5696308f5)
+![image](https://github.com/user-attachments/assets/2cdd263f-0b08-4f64-a282-dbeb37d8e5c1)
+![image](https://github.com/user-attachments/assets/48c7a151-6dab-4670-adf4-4815a681f47d)
+![image](https://github.com/user-attachments/assets/5c9df3d7-36e2-4f21-9103-31a4ae55efbe)
+
+
+
 
 
 
