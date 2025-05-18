@@ -66,8 +66,6 @@ src/
  ├── App.jsx         # Componente principal
  └── main.jsx        # Ponto de entrada
  
-📝 Licença
-Este projeto está licenciado sob a licença MIT.
-Sinta-se livre para utilizar, modificar e distribuir este projeto!
+
 
 
