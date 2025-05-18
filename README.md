@@ -45,7 +45,7 @@ bash
 Copiar
 Editar
 # Clone o repositório
-git clone https://github.com/SEU_USUARIO/evently.git
+git clone https://github.com/SEU_USUARIO/Evently-2.0.git
 
 # Acesse a pasta do projeto
 cd evently
