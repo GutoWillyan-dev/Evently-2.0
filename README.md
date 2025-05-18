@@ -55,7 +55,7 @@ npm install
 
 # Rode o servidor de desenvolvimento
 npm run dev
-O projeto estará disponível em http://localhost:5173.
+O projeto estará disponível em http://localhost:8080.
 
 📦 Estrutura de Pastas
 src/
