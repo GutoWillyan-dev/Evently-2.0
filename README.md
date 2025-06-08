@@ -17,6 +17,11 @@ Evently é uma plataforma moderna para encontrar, gerenciar e participar de even
 
 
 
+LINK PARA NAVEGAR E CONHECER MELHOR A EVENTLY: https://evently-2-0.vercel.app/
+
+
+
+
 
 
 
